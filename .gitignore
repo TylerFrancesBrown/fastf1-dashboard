@@ -1,0 +1,13 @@
+﻿# Python
+__pycache__/
+*.pyc
+.venv/
+backend/cache/
+
+# Node/React
+node_modules/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
