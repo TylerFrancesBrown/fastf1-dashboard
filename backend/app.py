@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import fastf1
 import pandas as pd
@@ -59,10 +59,30 @@ def fastest_lap():
 
 @app.route("/leaderboard")
 def leaderboard():
-    """Return full leaderboard with all drivers' fastest laps"""
-    session = fastf1.get_session(2023, "Bahrain", "Q")
+    """Return leaderboard for any session. Defaults to latest session."""
+    # Query parameters
+    year = request.args.get("year")
+    gp = request.args.get("gp")
+    session_type = request.args.get("session")  # 'Q', 'R', 'FP1', etc.
+
+    # If any parameter is missing, find the most recent session
+    if not year or not gp or not session_type:
+        schedule = fastf1.get_event_schedule(2023, include_testing=False)
+        # Filter only past events
+        past_events = schedule[schedule['EventDate'] <= fastf1.datetime.datetime.utcnow()]
+        last_event = past_events.iloc[-1]  # Most recent
+        year = last_event['Year']
+        gp = last_event['EventName']
+        session_type = 'Q'  # Default to qualifying for the latest event
+
+    # Make sure year is int
+    year = int(year)
+
+    # Load session
+    session = fastf1.get_session(year, gp, session_type)
     session.load()
     df = get_all_fastest_laps(session)
+
     return jsonify(format_leaderboard(df))
 
 if __name__ == "__main__":
