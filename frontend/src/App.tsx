@@ -1,12 +1,14 @@
-import React from 'react';
-import Leaderboard from './components/Leaderboard';
+import { BarChart3, LayoutDashboard } from "lucide-react";
+import Sidebar, { SidebarItem } from "./components/Sidebar";
 
 function App() {
   return (
-    <div>
-      <h1>FastF1 Dashboard</h1>
-      <Leaderboard />
-    </div>
+    <main className="app-container flex">
+      <Sidebar>
+        <SidebarItem icon={<LayoutDashboard size={20} />} text="Dashboard" alert />
+        <SidebarItem icon={<BarChart3 size={20} />} text="Previous Results" />
+      </Sidebar>
+    </main>
   );
 }
 
