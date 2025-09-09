@@ -1,6 +1,28 @@
 from db import get_connection
+import math
+import datetime
+
+def convert_timeDelta(timedelta_obj):
+    """
+    Convert a timedelta object to a string.
+    - If under 1 hour: "MM:SS.mmm"
+    - If 1 hour or more: "H:MM:SS.mmm"
+    """
+    total_seconds = int(timedelta_obj.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    milliseconds = int(timedelta_obj.microseconds / 1000)
+
+    if hours > 0:
+        return f"{hours}:{minutes:02}:{seconds:02}.{milliseconds:03}"  # H:MM:SS.mmm
+    else:
+        return f"{minutes}:{seconds:02}.{milliseconds:03}"  # MM:SS.mmm
 
 def insert_results(year, grand_prix, results):
+    """
+    Insert race results into the database.
+    Handles finished times, DNFs/DNS/DSQ, NaN, and unexpected FastF1 values.
+    """
     conn = get_connection()
     cur = conn.cursor()
 
@@ -32,16 +54,22 @@ def insert_results(year, grand_prix, results):
         """, (row['TeamName'],))
         team_id = cur.fetchone()[0]
 
-        # Determine time_or_status
+        # Handle time_or_status safely
         race_time = row.get('Time', None)
         status = row['Status']
 
-        if race_time is not None:
-            time_or_status = race_time  # actual race completion time
+        if isinstance(race_time, datetime.timedelta):
+            # Finished: convert timedelta to smart string
+            time_or_status = convert_timeDelta(race_time)
+        elif isinstance(race_time, float) and math.isnan(race_time):
+            # NaN → DNF/DNS/DSQ
+            time_or_status = status if status in ['DNF', 'DNS', 'DSQ'] else 'DNF'
+        elif isinstance(race_time, str):
+            # Weird string value → normalize
+            time_or_status = status if status in ['DNF', 'DNS', 'DSQ'] else 'DNF'
         else:
-            time_or_status = status  # DNF, DNS, Power Unit, Fuel pressure, etc.
-
-
+            # Catch-all fallback
+            time_or_status = 'DNF'
 
         # Insert race result
         cur.execute("""
