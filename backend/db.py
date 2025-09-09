@@ -1,6 +1,8 @@
 import psycopg2
+from fastf1_utils import get_race_results
+from inserter import insert_results
 
-def get_connection():
+def get_db_connection():
     return psycopg2.connect(
         dbname="f1db",
         user="postgres",
@@ -10,7 +12,7 @@ def get_connection():
     )
 
 def init_db():
-    conn = get_connection()
+    conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -56,3 +58,57 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
+def get_race_results_from_db(year, grand_prix):
+    conn = get_db_connection()  # connection opened here
+    try:
+        with conn.cursor() as cur:
+            # Check if results exist
+            cur.execute("""
+                SELECT COUNT(*) AS count
+                FROM race_results rr
+                JOIN races r ON rr.race_id = r.race_id
+                WHERE r.year = %s AND r.grand_prix = %s
+            """, (year, grand_prix))
+            count = cur.fetchone()[0]
+
+        # If no results, fetch from API and insert
+        if count == 0:
+            results_to_insert = get_race_results(year, grand_prix)
+            insert_results(conn, year, grand_prix, results_to_insert)
+
+        # Fetch final results
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    d.driver_number,
+                    d.first_name || ' ' || d.last_name AS driver_name,
+                    t.name AS team_name,
+                    rr.position,
+                    rr.laps,
+                    rr.time_or_status,
+                    rr.points
+                FROM race_results rr
+                JOIN races r ON rr.race_id = r.race_id
+                JOIN drivers d ON rr.driver_id = d.driver_id
+                JOIN teams t ON rr.team_id = t.team_id
+                WHERE r.year = %s AND r.grand_prix = %s
+                ORDER BY rr.position
+            """, (year, grand_prix))
+            rows = cur.fetchall()
+
+        # Format results as list of dicts
+        return [
+            {
+                "driver_number": row[0],
+                "driver_name": row[1],
+                "team_name": row[2],
+                "position": row[3],
+                "laps": row[4],
+                "time_or_status": row[5],
+                "points": row[6]
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()  # connection closed here

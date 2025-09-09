@@ -1,4 +1,3 @@
-from db import get_connection
 import math
 import datetime
 
@@ -18,12 +17,11 @@ def convert_timeDelta(timedelta_obj):
     else:
         return f"{minutes}:{seconds:02}.{milliseconds:03}"  # MM:SS.mmm
 
-def insert_results(year, grand_prix, results):
+def insert_results(conn, year, grand_prix, results):
     """
     Insert race results into the database.
     Handles finished times, DNFs/DNS/DSQ, NaN, and unexpected FastF1 values.
     """
-    conn = get_connection()
     cur = conn.cursor()
 
     # Insert race row
@@ -83,5 +81,3 @@ def insert_results(year, grand_prix, results):
               time_or_status, float(row['Points'])))
 
     conn.commit()
-    cur.close()
-    conn.close()
