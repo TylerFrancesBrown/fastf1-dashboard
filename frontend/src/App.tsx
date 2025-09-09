@@ -1,15 +1,13 @@
-import { BarChart3, LayoutDashboard } from "lucide-react";
-import Sidebar, { SidebarItem } from "./components/Sidebar";
+import './App.css'
 
 function App() {
   return (
-    <main className="app-container flex">
-      <Sidebar>
-        <SidebarItem icon={<LayoutDashboard size={20} />} text="Dashboard" alert />
-        <SidebarItem icon={<BarChart3 size={20} />} text="Previous Results" />
-      </Sidebar>
-    </main>
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <h1 className="text-5xl font-extrabold text-red-500">
+        Tailwind Test 🔴
+      </h1>
+    </div>
   );
 }
 
-export default App;
+export default App
