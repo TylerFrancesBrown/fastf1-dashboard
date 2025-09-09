@@ -1,13 +1,13 @@
-import './App.css'
+import React from "react";
+import RaceResultsTable from "./components/race-results-table";
 
 function App() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <h1 className="text-5xl font-extrabold text-red-500">
-        Tailwind Test 🔴
-      </h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Japan GP 2025 Results</h1>
+      <RaceResultsTable />
     </div>
   );
 }
 
-export default App
+export default App;
