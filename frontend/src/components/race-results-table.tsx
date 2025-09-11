@@ -2,19 +2,18 @@ import React, { useEffect, useState } from "react";
 import DriverRaceResultRow from "./driver-race-result";
 import type { RaceResult } from "../types";
 
-export default function RaceResultsTable() {
+export default function RaceResultsTable({ year, race }: { year: number; race: string }) {
   const [data, setData] = useState<RaceResult[]>([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/race-results?year=2025&race=Japan")
+    fetch(`http://127.0.0.1:5000/race-results?year=${year}&race=${race}`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched data:", data);
-        // if backend returns {results: [...]}, unwrap it
-        setData(Array.isArray(data) ? data : data.results);
+        setData(data.results);
       })
-      .catch((err) => console.error("Error fetching results:", err));
-  }, []);
+      .catch((err) => console.error("Error fetching:", err));
+  }, [year, race]); // refetch whenever year or race changes
 
   return (
     <table className="table-auto border-collapse border border-gray-300 w-full">
