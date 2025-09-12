@@ -1,51 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import RaceResultsTable from "./components/race-results-table";
 
 function App() {
-  const [year, setYear] = useState(2025);
-  const [race, setRace] = useState("Monza");
+  const [years, setYears] = useState<number[]>([]);
+  const [races, setRaces] = useState<string[]>([]);
+  const [year, setYear] = useState<number | null>(null);
+  const [race, setRace] = useState<string>("");
 
-  const handleYearChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setYear(Number(event.target.value));
-  };
+  // Fetch years on load
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/years")
+      .then(res => res.json())
+      .then(data => {
+        setYears(data.years);
+        if (data.years.length > 0) {
+          setYear(data.years[data.years.length - 1]); // default latest year
+        }
+      });
+  }, []);
 
-  const handleRaceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setRace(event.target.value);
-  };
+  // Fetch races when year changes
+  useEffect(() => {
+    fetch(`http://127.0.0.1:5000/races?year=${year}`)
+      .then(res => res.json())
+      .then(data => {
+        setRaces(data.races);
+        if (data.races.length > 0) {
+          setRace(data.races[0]);
+        }
+      });
+  }, [year]);
 
   return (
     <div className="p-6">
       {/* Year Dropdown */}
       <label className="mr-2 font-semibold">Year:</label>
       <select
-        value={year}
-        onChange={handleYearChange}
+        value={year ?? ""}
+        onChange={(e) => setYear(Number(e.target.value))}
         className="border p-2 mr-4"
       >
-        <option value={2023}>2023</option>
-        <option value={2024}>2024</option>
-        <option value={2025}>2025</option>
+        {years.map((y) => (
+          <option key={y} value={y}>{y}</option>
+        ))}
       </select>
 
       {/* Race Dropdown */}
       <label className="mr-2 font-semibold">Race:</label>
       <select
         value={race}
-        onChange={handleRaceChange}
+        onChange={(e) => setRace(e.target.value)}
         className="border p-2"
       >
-        <option value="Monza">Monza</option>
-        <option value="Silverstone">Silverstone</option>
-        <option value="Spa">Spa</option>
-        <option value="Monaco">Monaco</option>
+        {races.map((r) => (
+          <option key={r} value={r}>{r}</option>
+        ))}
       </select>
 
       <h1 className="text-2xl font-bold mb-4 mt-4">
-        {race} GP {year} Results
+        {race} {year} Results
       </h1>
 
-      {/* Automatically re-fetches when year or race changes */}
-      <RaceResultsTable year={year} race={race} />
+      {year && race && <RaceResultsTable year={year} race={race} />}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import fastf1
 import pandas as pd
 from pathlib import Path
 from utils import format_race_result
-from db import get_race_results_from_db
+from fetcher import *
 
 # -----------------------------
 # Your existing functions
@@ -24,8 +24,18 @@ CORS(app)
 def race_results():
     year = request.args.get('year', type=int)
     race = request.args.get('race', type=str)
-    results = get_race_results_from_db(year, race)
+    results = fetch_race_results_from_db(year, race)
     return jsonify(format_race_result(results))
+
+@app.get("/years")
+def get_years():
+    return jsonify(fetch_available_years())
+
+@app.get("/races")
+def get_races():
+    year = request.args.get('year', type=int)
+    return jsonify(fetch_races_in_year(year))
+
 
 
 if __name__ == "__main__":

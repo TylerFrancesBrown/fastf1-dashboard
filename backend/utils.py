@@ -3,7 +3,7 @@ def format_race_result(results):
         "results": [
             {
                 "driver_number": row["driver_number"],
-                "driver_name": row["driver_name"],
+                "driver_name": f"{row['first_name']} {row['last_name']}",
                 "team_name": row["team_name"],
                 "position": row["position"],
                 "laps": row["laps"],
@@ -13,8 +13,3 @@ def format_race_result(results):
             for row in results
         ]
     }
-
-def convert_timeDelta(timedelta):
-    seconds = timedelta.total_seconds()
-    minutes = divmod(seconds, 60)
-    return f"{int(minutes[0])}:{minutes[1]:.3f}"
