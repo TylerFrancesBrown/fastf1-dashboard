@@ -81,10 +81,16 @@ def fetch_available_years():
         years = [row[0] for row in cur.fetchall()]
     return {"years": years}
 
-def fetch_races_in_year(year,):
-    conn = get_db_connection()  # connection opened here
+def fetch_races_in_year(year):
+    conn = get_db_connection()
 
     with conn.cursor() as cur:
-        cur.execute("SELECT full_name FROM races WHERE year = %s AND round_num <> 0 ORDER BY round_num;", (year,))
-        races = [row[0] for row in cur.fetchall()]
+        cur.execute("""
+            SELECT full_name, short_name
+            FROM races
+            WHERE year = %s AND round_num <> 0
+            ORDER BY round_num;
+        """, (year,))
+        races = [{"full_name": row[0], "short_name": row[1]} for row in cur.fetchall()]
+
     return {"races": races}
